@@ -4,23 +4,13 @@
     "name": "Skillwell"
   },
   "metadata": {
-    "description": "Shared Claude Code skills for Skillwell product, development and testing teams."
+    "description": "Shared Claude Code skills for Skillwell teams."
   },
   "plugins": [
     {
-      "name": "product",
-      "source": "./plugins/product",
-      "description": "Skills for product owners: turn PRDs into supporting documentation."
-    },
-    {
-      "name": "development",
-      "source": "./plugins/development",
-      "description": "Skills for developers: everyday engineering workflows."
-    },
-    {
       "name": "testing",
       "source": "./plugins/testing",
-      "description": "Skills for QA: Jira-to-test-cases and PRD-based test plans."
+      "description": "Skills for QA: tester-facing briefings from pull requests."
     }
   ]
 }

@@ -7,6 +7,7 @@ A [Claude Code](https://claude.com/claude-code) plugin marketplace with shared s
 - [Quick install](#quick-install)
 - [Available plugins](#available-plugins)
 - [Starter guide: using the plugins](#starter-guide-using-the-plugins)
+- [Using it in your own repo and branch (developers)](#using-it-in-your-own-repo-and-branch-developers)
 - [Starter guide: creating your own skill](#starter-guide-creating-your-own-skill)
 - [Sharing your skill with the team](#sharing-your-skill-with-the-team)
 - [Troubleshooting](#troubleshooting)
@@ -27,9 +28,7 @@ Then run `/reload-plugins` (or restart Claude Code).
 
 | Plugin | For | Skills |
 |--------|-----|--------|
-| `product` | Product owners | `prd-to-docs`: PRD to stakeholder brief, release notes or feature guide |
-| `development` | Developers | `pr-description`: PR title and description from your branch's diff |
-| `testing` | QA | `jira-test-cases`: Jira ticket to traceable test cases<br>`prd-test-plan`: PRD to test plan |
+| `testing` | QA / testers | `pr-test-insights`: reads a pull request and writes a tester briefing: what changed, what is touched, what could break, how to test it |
 
 ---
 
@@ -45,15 +44,13 @@ You need Claude Code installed and signed in. Everything below happens inside Cl
 
 This registers the catalogue. It installs nothing yet. `etudevelopers/skillwell-ai-skills` is the GitHub `owner/repo`.
 
-### Step 2. Install the plugin for your role
+### Step 2. Install the plugin
 
-| If you are... | Run |
-|---------------|-----|
-| Product owner | `/plugin install product@skillwell-ai-skills` |
-| Developer | `/plugin install development@skillwell-ai-skills` |
-| QA / tester | `/plugin install testing@skillwell-ai-skills` |
+```
+/plugin install testing@skillwell-ai-skills
+```
 
-Install more than one if you wear several hats. You can also run `/plugin`, open the **Discover** tab, and pick plugins from a list.
+You can also run `/plugin`, open the **Discover** tab, and pick plugins from a list. As more plugins are added, install only the ones relevant to your role.
 
 ### Step 3. Reload
 
@@ -67,16 +64,15 @@ Two ways:
 
 **Just ask.** Claude loads the matching skill automatically when your request fits its description.
 
-> "Write test cases for ABC-123"
-> "Turn this PRD into release notes"
+> "What do I need to test in PR 42?"
+> "Give me a test briefing for this branch"
 
 **Or call it by name.** Skills are namespaced as `/<plugin>:<skill>`:
 
 ```
-/testing:jira-test-cases ABC-123
-/testing:prd-test-plan
-/product:prd-to-docs
-/development:pr-description
+/testing:pr-test-insights 42
+/testing:pr-test-insights https://github.com/<owner>/<repo>/pull/42
+/testing:pr-test-insights            (uses the current branch)
 ```
 
 ### Step 5. Know what you can do next
@@ -93,8 +89,91 @@ Two ways:
 1. `/plugin marketplace add etudevelopers/skillwell-ai-skills`
 2. `/plugin install testing@skillwell-ai-skills`
 3. `/reload-plugins`
-4. `/testing:jira-test-cases ABC-123`, or paste the ticket text after the command if your Claude Code has no Jira connection.
-5. Review the table of cases, answer any open questions it lists, and ask it to adjust (for example "add boundary cases for the amount field" or "export as CSV").
+4. In the repo being tested, run `/testing:pr-test-insights 42` (use your PR number). The `gh` command-line tool must be installed and signed in so Claude can read the PR.
+5. Read the briefing (summary, areas touched, test scenarios, setup, questions for the developer), and ask for changes, for example "focus on the API changes" or "add edge cases for the new field".
+
+---
+
+## Using it in your own repo and branch (developers)
+
+The skill reads whatever repository you run Claude Code in. The skills repo and your application repo are separate: you install the plugin once, then use it in any repo. Nothing from this repo needs to be copied into yours.
+
+### Option 1: just for you (recommended to start)
+
+Install once. It applies to every repo you open.
+
+```
+/plugin marketplace add etudevelopers/skillwell-ai-skills
+/plugin install testing@skillwell-ai-skills
+/reload-plugins
+```
+
+Then, in a terminal inside your application repo, on your working branch:
+
+```bash
+cd <your-app-repo>
+git switch <your-branch>        # for example the branch named after your ticket
+claude
+```
+
+Inside Claude Code:
+
+```
+/testing:pr-test-insights
+```
+
+With no argument it compares your current branch with the base branch (`master` or `main`) and includes uncommitted changes, so you can run it **before** you open the PR. After the PR exists, anyone can run it by number:
+
+```
+/testing:pr-test-insights 42
+```
+
+### Option 2: for the whole team (declare it in the app repo)
+
+So that every developer and tester who opens the app repo gets the plugin without installing it by hand, add the marketplace to the app repo's committed Claude settings. From inside the app repo:
+
+```bash
+claude plugin marketplace add etudevelopers/skillwell-ai-skills --scope project
+claude plugin install testing@skillwell-ai-skills --scope project
+```
+
+This writes to `.claude/settings.json` in that repo. If the file already exists, the commands merge into it. The result looks like this (keep your existing keys such as `enabledPlugins`):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "skillwell-ai-skills": {
+      "source": { "source": "github", "repo": "etudevelopers/skillwell-ai-skills" }
+    }
+  },
+  "enabledPlugins": {
+    "testing@skillwell-ai-skills": true
+  }
+}
+```
+
+Commit it through a normal pull request to the app repo. After it merges, team members are prompted to trust the repo and install the marketplace the next time they start Claude Code there. The app repo can stay private; only this skills repo is public, and the plugin does not send your code anywhere except to Claude in your own session.
+
+### Developer workflow
+
+1. Work on your branch as usual and commit.
+2. Run `/testing:pr-test-insights` and read the briefing: what changed, what else is affected, how to test, what the tests in your branch do not cover.
+3. Fix gaps or answer the "questions for the developer" before asking for review.
+4. Open the PR. Paste the briefing into the PR description under "Testing notes", or ask Claude to "post this as a comment on the PR".
+5. The tester runs `/testing:pr-test-insights <PR number>` against the same PR and gets the same briefing from the actual diff.
+
+### What the skill needs
+
+| Needs | Why | If missing |
+|-------|-----|------------|
+| `git` and a checkout of your branch | Branch mode | Required |
+| GitHub CLI (`gh`), signed in with `gh auth login` | Reads a PR by number | Use branch mode, or a GitHub tool in your Claude Code setup |
+| A Jira/Atlassian connection in your Claude Code (optional) | Fetches the linked ticket for intended behaviour | The skill works from the code change alone, or paste the ticket text |
+| A code-graph or impact-analysis tool (optional) | More accurate "also affected" list | It falls back to searching the code |
+
+### Running it automatically on every PR
+
+A skill runs when someone invokes it; it does not trigger by itself when a PR is pushed. To post a briefing on every PR automatically you need a CI step that runs Claude (for example a GitHub Action with an API key stored as a repository secret). That is a separate piece of setup with a cost per run. This repo does not include it yet.
 
 ---
 
@@ -265,7 +344,7 @@ The default branch is `master`. No change reaches it except through a pull reque
 | Skill does not trigger on its own | Its `description` is too vague. Add the phrases people actually use, or call it by name: `/<plugin>:<skill>`. |
 | New skills from teammates are missing | `/plugin marketplace update skillwell-ai-skills`, then `/reload-plugins`. |
 | Local plugin not loading | Confirm `.claude-plugin/plugin.json` is valid JSON and the folder is named `skills/<skill-name>/SKILL.md`. Run `claude --plugin-dir <path>` again. |
-| Jira ticket cannot be fetched | Your Claude Code may not have a Jira connection. Paste the ticket text instead. |
+| `pr-test-insights` cannot read the PR | It needs the GitHub CLI. Install `gh` and run `gh auth login`, then run the skill from inside the repo that owns the PR. A linked Jira ticket is optional: if Claude has no Jira connection it works from the PR alone, or you can paste the ticket text. |
 
 ## Repo layout
 

@@ -64,7 +64,7 @@ Show the exact structure of the result (table, headings, template).
 
 ## Conventions
 
-- **Name**: lowercase, hyphenated, matches the folder name (`jira-test-cases`).
+- **Name**: lowercase, hyphenated, matches the folder name (`pr-test-insights`).
 - **Description**: one or two sentences, starts with what it does, then "Use when...". This is the trigger, so make it specific.
 - **One job per skill.** Split big workflows into separate skills.
 - **Ask, don't assume.** If input is missing or ambiguous, the skill should ask or mark assumptions explicitly.

@@ -1,6 +1,6 @@
 {
   "name": "testing",
-  "description": "Skills for QA: Jira-to-test-cases and PRD-based test plans.",
-  "version": "0.1.0",
+  "description": "Skills for QA: tester-facing briefings from pull requests.",
+  "version": "0.2.0",
   "author": { "name": "Skillwell QA Team" }
 }
