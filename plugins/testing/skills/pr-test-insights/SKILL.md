@@ -1,6 +1,6 @@
 ---
 name: pr-test-insights
-description: Read a pull request (or the current branch's changes) and write a tester-facing briefing: what changed, what areas it touches, what could break, and how to test it. Use when a PR is opened or updated, when a tester asks "what do I need to test for this PR / ticket", or when the user gives a PR number, PR URL or branch and wants test guidance.
+description: Read a pull request (or the current branch's changes) and write a tester-facing briefing: what changed, what areas it touches, what could break, and how to test it. Use when a tester or developer gives a Jira ticket URL or key, a PR number, a PR URL or a branch, or asks "what do I need to test for this ticket / PR".
 ---
 
 # PR test insights
@@ -9,11 +9,17 @@ Turn a code change into a briefing a tester can act on without reading the diff.
 
 ## Inputs
 
-- A PR number or URL, **or** a branch name, **or** nothing (use the current branch against its base).
+- A Jira ticket URL or key (the usual input for a tester), **or** a PR number or URL, **or** a branch name, **or** nothing (use the current branch against its base).
 - Optional: the linked ticket. Look for a ticket key (pattern `ABC-123`) in the PR title, branch name, commit messages and PR description. If a Jira/Atlassian tool is available in the session, fetch the ticket (description, acceptance criteria, comments) for the intended behaviour. If not, work from the change alone and say so; never guess ticket content.
 
 ## Steps
 
+0. **If the input is a Jira URL or key, find the change first.**
+   - Extract the key from the URL (`.../browse/ABC-123` gives `ABC-123`).
+   - Fetch the ticket with the Jira/Atlassian tool if the session has one; otherwise ask the user to paste the ticket text. Use the description, acceptance criteria and comments (a developer's fix comment is often the best statement of intent).
+   - Find the PR(s) for the ticket in the repo you are in: list PRs with `gh pr list --state all --limit 200 --json number,title,headRefName,state` and keep those whose title or branch name contains the key. Also check the ticket's linked development items if the Jira tool exposes them.
+   - If there are several PRs, cover all of them in one briefing and say which change belongs to which PR. If there is none, look for commits (`git log --all --grep=<KEY>`); if still none, say so and ask for a PR number or branch. Never guess which change belongs to the ticket.
+   - Then continue with step 1 for each PR found.
 1. **Gather the change.**
    - PR: `gh pr view <n> --json title,body,author,labels,baseRefName,headRefName,files,commits` and `gh pr diff <n>`. If `gh` is not available, use a GitHub tool from the session if there is one, or ask the user for the base and head branches and use `git`.
    - Branch (the default when no argument is given, and the right mode for a developer checking their own work before opening a PR): `git log <base>..HEAD --oneline` and `git diff <base>...HEAD`. Use `origin/<base>` if the local base is stale. The base is usually `main` or `master`; check `git remote show origin` or ask if unclear. Include uncommitted changes (`git status`, `git diff`) and say so if there are any.
@@ -63,6 +69,6 @@ Anything unclear, any behaviour the diff changes that the description does not m
 - Do not invent screens, field names, messages or URLs. Use the exact names that appear in the code.
 - No secrets in the output: credentials, tokens, customer data, internal hostnames.
 - Keep it short enough to read in a few minutes. Prefer a prioritised list of scenarios over an exhaustive one.
-- Do not post the briefing to the PR, a ticket or chat unless the user asks.
+- Do not post the briefing to the PR, a ticket or chat unless the user asks. If the user asks to add it to the Jira ticket, show the exact text first and get a yes. Prefer adding it as a comment. If they want it in the description, add it as a clearly marked section (for example headed "Test briefing (generated)") at the end and never change or remove existing description text. Report what was written and where.
 - This skill is for one PR or branch. For release-wide regression planning across many changes, use a dedicated release-analysis skill if the repo has one.
 - This skill only reads. It does not build, run tests, commit or push.

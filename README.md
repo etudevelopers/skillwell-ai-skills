@@ -154,6 +154,17 @@ This writes to `.claude/settings.json` in that repo. If the file already exists,
 
 Commit it through a normal pull request to the app repo. After it merges, team members are prompted to trust the repo and install the marketplace the next time they start Claude Code there. The app repo can stay private; only this skills repo is public, and the plugin does not send your code anywhere except to Claude in your own session.
 
+### Tester workflow (give it the Jira ticket)
+
+A tester does not need the PR number. Open Claude Code in a checkout of the app repo and give it the ticket URL or key:
+
+```
+/testing:pr-test-insights https://<your-site>.atlassian.net/browse/ABC-123
+/testing:pr-test-insights ABC-123
+```
+
+It reads the ticket, finds the PR(s) whose title or branch name contains that key, reads the code changes and writes the briefing. If your Claude Code has no Jira connection, paste the ticket text after the command instead. To put the result on the ticket, ask it: "add this to the ticket as a comment" (or "add it to the description"). It shows you the text first and writes only after you say yes; it never changes existing description text.
+
 ### Developer workflow
 
 1. Work on your branch as usual and commit.
@@ -168,12 +179,12 @@ Commit it through a normal pull request to the app repo. After it merges, team m
 |-------|-----|------------|
 | `git` and a checkout of your branch | Branch mode | Required |
 | GitHub CLI (`gh`), signed in with `gh auth login` | Reads a PR by number | Use branch mode, or a GitHub tool in your Claude Code setup |
-| A Jira/Atlassian connection in your Claude Code (optional) | Fetches the linked ticket for intended behaviour | The skill works from the code change alone, or paste the ticket text |
+| A Jira/Atlassian connection in your Claude Code (optional) | Fetches the ticket, finds PRs from a ticket URL, and can add the briefing to the ticket | Paste the ticket text and give a PR number or branch; adding to Jira is then manual |
 | A code-graph or impact-analysis tool (optional) | More accurate "also affected" list | It falls back to searching the code |
 
 ### Running it automatically on every PR
 
-A skill runs when someone invokes it; it does not trigger by itself when a PR is pushed. To post a briefing on every PR automatically you need a CI step that runs Claude (for example a GitHub Action with an API key stored as a repository secret). That is a separate piece of setup with a cost per run. This repo does not include it yet.
+A skill runs when someone invokes it; it does not trigger by itself when a PR is pushed. The supported way is manual: the developer runs it before opening the PR, or the tester runs it with the ticket URL. Posting a briefing to every PR or ticket automatically needs a CI step that runs a model (for example a GitHub Action with an API key stored as a repository secret) plus a Jira service account. That is separate setup with a cost, and this repo does not include it.
 
 ---
 
