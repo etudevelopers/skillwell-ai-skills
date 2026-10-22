@@ -9,7 +9,7 @@ Write a pull request description from the actual diff, not from memory.
 
 ## Steps
 
-1. Run `git status`, `git log <base>..HEAD --oneline` and `git diff <base>...HEAD --stat` (base is usually `main`; ask if unclear). Read the diff for anything non-obvious.
+1. Run `git status`, `git log <base>..HEAD --oneline` and `git diff <base>...HEAD --stat` (base is usually `main` or `master`; ask if unclear). Read the diff for anything non-obvious.
 2. Draft the description below.
 3. Show it to the user. Do not create or edit the PR unless asked.
 

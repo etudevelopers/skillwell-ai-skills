@@ -237,6 +237,13 @@ Then open a pull request on GitHub.
 
 You need three things, all described in [CONTRIBUTING.md](CONTRIBUTING.md#add-a-new-plugin): a `plugin.json`, at least one skill, and an entry in `.claude-plugin/marketplace.json`.
 
+### Review and merge rules
+
+The default branch is `master`. No change reaches it except through a pull request, and a PR cannot be merged until **at least 1 approving review** from someone other than the author. This is enforced two ways:
+
+- A branch protection rule on `master` requires the approval, and dismisses approvals when new commits are pushed.
+- The [Require approval](.github/workflows/require-approval.yml) workflow is a required status check. It fails until the approval count is met. To require more reviewers, change `REQUIRED_APPROVALS` in that file and the review count in the branch rule.
+
 ### Before you open the PR
 
 - [ ] Tried it in Claude Code on a realistic example
