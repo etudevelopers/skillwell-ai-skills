@@ -1,0 +1,45 @@
+name: Require approval
+
+# Fails until the pull request has the required number of approvals.
+# This only becomes a merge blocker when "Require approval" is also set as a
+# required status check in the branch protection rule for master (see README).
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed, edited]
+
+permissions:
+  pull-requests: read
+
+env:
+  REQUIRED_APPROVALS: 1
+
+jobs:
+  require-approval:
+    name: Require approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Count approvals
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # Latest non-comment review per reviewer; the PR author cannot approve their own PR.
+          approvals=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/reviews" \
+            --jq '.[] | select(.state != "COMMENTED" and .user != null) | {user: .user.login, state: .state}' \
+            | jq -s --arg author "$PR_AUTHOR" '
+                group_by(.user)
+                | map(last)
+                | map(select(.state == "APPROVED" and .user != $author))
+                | length')
+
+          echo "Approvals: $approvals (required: $REQUIRED_APPROVALS)"
+
+          if [ "$approvals" -lt "$REQUIRED_APPROVALS" ]; then
+            echo "::error::This PR needs at least $REQUIRED_APPROVALS approval(s) from someone other than the author before it can be merged."
+            exit 1
+          fi

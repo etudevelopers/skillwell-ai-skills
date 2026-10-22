@@ -1,0 +1,16 @@
+{
+  "name": "skillwell-ai-skills",
+  "owner": {
+    "name": "Skillwell"
+  },
+  "metadata": {
+    "description": "Shared Claude Code skills for Skillwell teams."
+  },
+  "plugins": [
+    {
+      "name": "testing",
+      "source": "./plugins/testing",
+      "description": "Skills for QA: tester-facing briefings and importable test cases from pull requests and Jira tickets."
+    }
+  ]
+}
