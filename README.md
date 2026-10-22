@@ -28,7 +28,7 @@ Then run `/reload-plugins` (or restart Claude Code).
 
 | Plugin | For | Skills |
 |--------|-----|--------|
-| `testing` | QA / testers | `pr-test-insights`: reads a pull request and writes a tester briefing: what changed, what is touched, what could break, how to test it |
+| `testing` | QA / testers | `pr-test-insights`: reads a pull request and writes a tester briefing: what changed, what is touched, what could break, how to test it<br>`pr-test-cases`: turns a Jira ticket and its PR into data-driven and state-driven UI and API test cases (Given/When/Then) in a CSV for import |
 
 ---
 
@@ -164,6 +164,20 @@ A tester does not need the PR number. Open Claude Code in a checkout of the app 
 ```
 
 It reads the ticket, finds the PR(s) whose title or branch name contains that key, reads the code changes and writes the briefing. If your Claude Code has no Jira connection, paste the ticket text after the command instead. To put the result on the ticket, ask it: "add this to the ticket as a comment" (or "add it to the description"). It shows you the text first and writes only after you say yes; it never changes existing description text.
+
+### Test cases for import (CSV)
+
+After the briefing, a tester can have the test cases written to a CSV file:
+
+```
+/testing:pr-test-cases ABC-123
+```
+
+- It writes `ABC-123-test-cases.csv` in the current folder: UI and API cases in Given/When/Then, with the data to create under **Pre-requisites**. UI-level cases (checked on the screen) and API-level cases (checked by calling an endpoint) are kept apart: separate ID series (`ABC-123-UI-01`, `ABC-123-API-01`), a `Type` and a `Target` column (screen, or method and endpoint), UI rows first. If the change has no server side, it says so instead of inventing API cases. Data-driven cases get one row per data combination; state-driven cases name the starting state and the event.
+- **Expected results come only from the Jira ticket** (description, acceptance criteria, comments, the developer's QA changelist). The code is used to find what to test, never what the answer should be, so a bug cannot become an expected result.
+- If the ticket does not say what should happen in a scenario, Claude **asks you** in one batch. A scenario you cannot answer is left out of the file and listed as "Not written".
+- If your import tool needs different column names, give Claude the header row and it will match it.
+- It only writes the CSV file. It does not post to Jira or commit anything.
 
 ### Developer workflow
 

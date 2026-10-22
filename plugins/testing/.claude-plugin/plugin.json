@@ -1,6 +1,6 @@
 {
   "name": "testing",
-  "description": "Skills for QA: tester-facing briefings from pull requests.",
-  "version": "0.2.0",
+  "description": "Skills for QA: tester-facing briefings and importable test cases from pull requests and Jira tickets.",
+  "version": "0.3.0",
   "author": { "name": "Skillwell QA Team" }
 }

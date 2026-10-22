@@ -10,7 +10,7 @@
     {
       "name": "testing",
       "source": "./plugins/testing",
-      "description": "Skills for QA: tester-facing briefings from pull requests."
+      "description": "Skills for QA: tester-facing briefings and importable test cases from pull requests and Jira tickets."
     }
   ]
 }
