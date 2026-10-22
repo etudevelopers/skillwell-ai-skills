@@ -67,7 +67,8 @@ Show the exact structure of the result (table, headings, template).
 - **Name**: lowercase, hyphenated, matches the folder name (`pr-test-insights`).
 - **Description**: one or two sentences, starts with what it does, then "Use when...". This is the trigger, so make it specific.
 - **One job per skill.** Split big workflows into separate skills.
-- **Ask, don't assume.** If input is missing or ambiguous, the skill should ask or mark assumptions explicitly.
+- **Ask, don't assume.** If input is missing or ambiguous, the skill should ask or mark assumptions explicitly. Where a wrong guess would make results misleading (for example expected results in test cases), do not guess at all: take it from the agreed source or ask the user.
+- **Be explicit about writes.** A skill that writes a file names the file and writes nothing else; skills never post to Jira, a PR or chat, or commit, unless the user asks.
 - **Specific outputs.** Define the output format so results are consistent across authors.
 - **No company-specific data** in this repo while it is public.
 - Keep `SKILL.md` under ~300 lines; put long reference material in a sibling file and link to it.

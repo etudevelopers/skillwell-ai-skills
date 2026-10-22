@@ -66,6 +66,7 @@ Two ways:
 
 > "What do I need to test in PR 42?"
 > "Give me a test briefing for this branch"
+> "Write test cases as a CSV for ticket ABC-123"
 
 **Or call it by name.** Skills are namespaced as `/<plugin>:<skill>`:
 
@@ -73,6 +74,7 @@ Two ways:
 /testing:pr-test-insights 42
 /testing:pr-test-insights https://github.com/<owner>/<repo>/pull/42
 /testing:pr-test-insights            (uses the current branch)
+/testing:pr-test-cases ABC-123       (test cases as a CSV, from a Jira ticket)
 ```
 
 ### Step 5. Know what you can do next
@@ -91,6 +93,7 @@ Two ways:
 3. `/reload-plugins`
 4. In the repo being tested, run `/testing:pr-test-insights 42` (use your PR number). The `gh` command-line tool must be installed and signed in so Claude can read the PR.
 5. Read the briefing (summary, areas touched, test scenarios, setup, questions for the developer), and ask for changes, for example "focus on the API changes" or "add edge cases for the new field".
+6. Then run `/testing:pr-test-cases ABC-123` (use the ticket key) to get the test cases as a CSV file. It asks you whenever the ticket does not say what the expected result is.
 
 ---
 
@@ -167,7 +170,7 @@ It reads the ticket, finds the PR(s) whose title or branch name contains that ke
 
 ### Test cases for import (CSV)
 
-After the briefing, a tester can have the test cases written to a CSV file:
+The usual order for a tester is: run `pr-test-insights` for the briefing, then `pr-test-cases` for the cases. After the briefing, the tester can have the test cases written to a CSV file:
 
 ```
 /testing:pr-test-cases ABC-123
@@ -181,19 +184,22 @@ After the briefing, a tester can have the test cases written to a CSV file:
 
 ### Developer workflow
 
+(Test cases from `pr-test-cases` are normally written by the tester from the Jira ticket. A developer can run it too, to check that the ticket states enough expected behaviour to test.)
+
 1. Work on your branch as usual and commit.
 2. Run `/testing:pr-test-insights` and read the briefing: what changed, what else is affected, how to test, what the tests in your branch do not cover.
 3. Fix gaps or answer the "questions for the developer" before asking for review.
 4. Open the PR. Paste the briefing into the PR description under "Testing notes", or ask Claude to "post this as a comment on the PR".
 5. The tester runs `/testing:pr-test-insights <PR number>` against the same PR and gets the same briefing from the actual diff.
 
-### What the skill needs
+### What the skills need
 
 | Needs | Why | If missing |
 |-------|-----|------------|
 | `git` and a checkout of your branch | Branch mode | Required |
 | GitHub CLI (`gh`), signed in with `gh auth login` | Reads a PR by number | Use branch mode, or a GitHub tool in your Claude Code setup |
-| A Jira/Atlassian connection in your Claude Code (optional) | Fetches the ticket, finds PRs from a ticket URL, and can add the briefing to the ticket | Paste the ticket text and give a PR number or branch; adding to Jira is then manual |
+| A Jira/Atlassian connection in your Claude Code (optional for the briefing, effectively needed for test cases) | Fetches the ticket, finds PRs from a ticket URL, and can add the briefing to the ticket. `pr-test-cases` takes every expected result from the ticket | Paste the ticket text and give a PR number or branch; adding to Jira is then manual |
+| Permission to write a file in the current folder (`pr-test-cases` only) | It writes `<KEY>-test-cases.csv` | Give it another folder |
 | A code-graph or impact-analysis tool (optional) | More accurate "also affected" list | It falls back to searching the code |
 
 ### Running it automatically on every PR
@@ -370,6 +376,9 @@ The default branch is `master`. No change reaches it except through a pull reque
 | New skills from teammates are missing | `/plugin marketplace update skillwell-ai-skills`, then `/reload-plugins`. |
 | Local plugin not loading | Confirm `.claude-plugin/plugin.json` is valid JSON and the folder is named `skills/<skill-name>/SKILL.md`. Run `claude --plugin-dir <path>` again. |
 | `pr-test-insights` cannot read the PR | It needs the GitHub CLI. Install `gh` and run `gh auth login`, then run the skill from inside the repo that owns the PR. A linked Jira ticket is optional: if Claude has no Jira connection it works from the PR alone, or you can paste the ticket text. |
+| `pr-test-cases` has no ticket text to work from | Expected results come only from the ticket, never from the code. Connect Jira, or paste the ticket (description, acceptance criteria, comments) after the command. If the ticket has no expected results, Claude asks you for them before writing. |
+| `pr-test-cases` leaves scenarios out | Those are listed under "Not written": the ticket did not say what should happen and you did not answer. Answer the questions and run it again. |
+| The CSV does not import cleanly | Give Claude the header row of your import tool's template so it can match the column names and order. UI and API cases are separated by the `Type` column and the `UI`/`API` part of the Test ID. |
 
 ## Repo layout
 
@@ -380,6 +389,8 @@ plugins/<team>/skills/<skill-name>/SKILL.md
 README.md                                  this guide
 CONTRIBUTING.md                            skill template and review checklist
 ```
+
+Today: one plugin, `testing`, with two skills (`pr-test-insights`, `pr-test-cases`).
 
 ## Visibility note
 
